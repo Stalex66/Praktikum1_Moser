@@ -1,5 +1,9 @@
 This is a copy of SigMA in order to improve the concensus culustering
 
+My code is in the concensus clustering folder under alex_workspace
+
+This is a copy of SigMA https://github.com/ratzenboe/SigMA
+
 
 # SigMA
 
