@@ -47,6 +47,90 @@ class GraphCreator():
             G[u][v]['weight'] = round(random.uniform(0.1, 1.0), 3)
     
         return G
+
+    def create_GraphX0(self):
+        G = nx.Graph()
+        G.add_nodes_from([1, 3, 4, 6, 10, 11])
+        G.add_edges_from([
+            (1, 3), (1, 4), (1, 6), (1, 10), (1, 11),
+            (3, 6), (3, 10), (3, 11),
+            (4, 10), (4, 11),
+            (6, 10), (6, 11)
+        ])
+        # Add weights to all edges
+        for u, v in G.edges():
+            G[u][v]['weight'] = 0.5
+        return G
+    def create_random_graph(num_nodes, edge_probability):
+        G = nx.Graph()
+        nodes = list(range(1, num_nodes + 1))  # Nodes from 1 to num_nodes
+        G.add_nodes_from(nodes)
+        
+        # Add random edges
+        for i in range(len(nodes)):
+            for j in range(i+1, len(nodes)):
+                if random.random() < edge_probability:  # Edge probability as parameter
+                    G.add_edge(nodes[i], nodes[j])
+        
+        # Add weights to all edges
+        for u, v in G.edges():
+            G[u][v]['weight'] = 0.5
+        
+        return G
+    def create_random_graph_with_weights(num_nodes, edge_probability):
+        G = nx.Graph()
+        nodes = list(range(1, num_nodes + 1))  # Nodes from 1 to num_nodes
+        G.add_nodes_from(nodes)
+        
+        # Add random edges
+        for i in range(len(nodes)):
+            for j in range(i+1, len(nodes)):
+                if random.random() < edge_probability:  # Edge probability as parameter
+                    G.add_edge(nodes[i], nodes[j])
+        
+        # Add weights to all edges
+        for u, v in G.edges():
+            G[u][v]['weight'] = round(random.uniform(0.1, 1.0), 3)
+        
+        return G
+
+    def create_GraphX1(self):
+        G = nx.Graph()
+        G.add_nodes_from([1, 3, 4, 6, 10, 11])
+        G.add_edges_from([
+            (1, 3), (1, 4), (1, 6), (1, 10), (1, 11),
+            (3, 6), (3, 10), (3, 11),
+            (4, 10), (4, 11),
+            (6, 10), (6, 11)
+        ])
+        # Add weights to all edges
+        predefined_w = [1.0 / 3.0, 1.0 / 3.0, 2.0 / 3.0, 1.0 / 2.0, 1.0 / 2.0,
+                        1.0 / 2.0, 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0,
+                        2.0 / 5.0, 2.0 / 5.0]
+        uv = 0
+        for u, v in G.edges():
+            G[u][v]['weight'] = predefined_w[uv]
+            uv += 1
+        return G
+
+    def create_GraphX2(self):
+        G = nx.Graph()
+        G.add_nodes_from([1, 3, 4, 6, 10, 11])
+        G.add_edges_from([
+            (1, 3), (1, 4), (1, 6), (1, 10), (1, 11),
+            (3, 6), (3, 10), (3, 11),
+            (4, 10), (4, 11),
+            (6, 10), (6, 11)
+        ])
+        # Add weights to all edges
+        predefined_w = [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 2.0, 1.0 / 2.0,
+                        1.0 / 3.0, 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0, 1.0 / 4.0,
+                        1.0 / 4.0, 1.0 / 4.0]
+        uv = 0
+        for u, v in G.edges():
+            G[u][v]['weight'] = predefined_w[uv]
+            uv += 1
+        return G
 #%%
 class NxGraphAssistant():
     def __init__(self):
@@ -136,39 +220,49 @@ class NxGraphAssistant():
     @staticmethod
     def analyze_cliques(G,treshold=0.9):
         # Find cliques with Jaccardian similarity higher than 0.9
-        cliques = [clique for clique in nx.find_cliques(G) if all(G[u][v]['weight'] > treshold for u, v in nx.utils.pairwise(clique))]
-        
+
+        cliques = [clique for clique in nx.find_cliques(G) if all(G.has_edge(u, v) and G[u][v]['weight'] > treshold for u, v in nx.utils.pairwise(clique))]
+
+
         # Calculate average Jaccardian value for each clique
         avg_jaccard_values = {}
         for clique in cliques:
             total_jaccard_value = sum(G[u][v]['weight'] for u, v in nx.utils.pairwise(clique))
             avg_jaccard_value = total_jaccard_value / len(clique)
             avg_jaccard_values[tuple(clique)] = avg_jaccard_value
-        
+
         # Sort cliques by average Jaccardian value in descending order
         sorted_cliques = sorted(avg_jaccard_values.keys(), key=lambda x: avg_jaccard_values[x], reverse=True)
         print("Sorted Cliques:")
         print(sorted_cliques)
+        print ("Avg Jaccard Values:")
+        print(avg_jaccard_values)
         # Keep track of assigned nodes
         assigned_nodes = set()
-        
+
         # remove all cliques that have nodes that are already assigned
         selected_cliques = []
         for clique in sorted_cliques:
             if not assigned_nodes.intersection(clique):
                 selected_cliques.append(clique)
                 assigned_nodes.update(clique)
-        
-        
+
+
+
         print("Selected Cliques:")
         print(selected_cliques)
-        
+
         # create copy of graph G
         new_graph = G.copy()
         # iterate all cliques
         for clique in selected_cliques:
             # create a new node for the clique
-            new_node = ''.join(clique)
+            name = ""
+            for node in clique:
+                if name != "":
+                    name += "+"
+                name += str(node)
+            new_node = name
             # add the new node to the new graph
             new_graph.add_node(new_node)
             # remove the old nodes from the new graph
@@ -178,22 +272,20 @@ class NxGraphAssistant():
                 for neighbor in G.neighbors(node):
                     if neighbor not in clique and neighbor in new_graph.nodes():
                         new_graph.add_edge(new_node, neighbor)
+                        print("Added edge between", new_node, "and", neighbor)
         return new_graph
     
     @staticmethod
-    def analyze_cliques_undirected(G):
-        pair = NxGraphAssistant.analyze_cliques(G)
-        graph = pair[0]
-        cliques = pair[1]
-        
-        # convert directed to undirected graph
-        undirected_graph = nx.Graph(graph)
-        # add all nodes from G
-        undirected_graph.add_nodes_from(G.nodes())
-        # add all edges from G
-        for u, v in G.edges():
-            undirected_graph.add_edge(u, v)
-        return undirected_graph, cliques
+    def plot_networkX_graph(G):
+        import networkx as nx
+        import matplotlib.pyplot as plt
+
+        # Adjust the layout of the graph for better readability
+        pos = nx.spring_layout(G, k=0.15)  # You can adjust the value of 'k' for desired spacing
+
+        nx.draw(G, pos, with_labels=True, font_weight='bold')
+        plt.show()
+
 #%%
 
 #%%
@@ -259,7 +351,11 @@ class Custom_Tree:
     def find_complete_subgraphs_in_connected_graph(self, G, current_graph, last_node=None):
         graph = G
         if NxGraphAssistant.is_complete_graph(G.subgraph(current_graph)):
-            name = ''.join(current_graph)
+            name = ""
+            for node in current_graph:
+                if name != "":
+                    name += "+"
+                name += str(node)
             if last_node is None:
                 last_node = self.add_node(0,name)
             else:
@@ -324,13 +420,17 @@ class ClusteringHandler():
         for tree in trees:
             tree.print_tree()
             print("---")
+        return trees
+
 
     
 #%%
 clusterMaster = ClusteringHandler()
-G = GraphCreator().create_advanced_graph()
-#G = NxGraphAssistant.analyze_cliques(G)
-clusterMaster.do_all(G)
+#graph = GraphCreator.create_random_graph_with_weights(num_nodes=50, edge_probability=0.5)
+graph = GraphCreator().create_GraphX2()
+graph = NxGraphAssistant.analyze_cliques(graph,0.2)
+NxGraphAssistant.plot_networkX_graph(graph)
+T = clusterMaster.do_all(graph)
 #%%
 
 #%%
